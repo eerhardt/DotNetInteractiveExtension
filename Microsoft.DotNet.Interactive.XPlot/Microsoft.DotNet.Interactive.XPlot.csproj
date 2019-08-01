@@ -16,10 +16,10 @@
   <ItemGroup>
     <Reference Include="..\lib\Microsoft.DotNet.Interactive.dll" />
     <Reference Include="Microsoft.Data.DataFrame">
-      <HintPath>..\..\corefxlab\src\Microsoft.Data\bin\Debug\netstandard2.0\Microsoft.Data.DataFrame.dll</HintPath>
+      <HintPath>..\lib\Microsoft.Data.DataFrame.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.DotNet.Interactive.Rendering">
-      <HintPath>..\..\try\Microsoft.DotNet.Interactive.Rendering\bin\Debug\netstandard2.0\Microsoft.DotNet.Interactive.Rendering.dll</HintPath>
+      <HintPath>..\lib\Microsoft.DotNet.Interactive.Rendering.dll</HintPath>
     </Reference>
     <None Include="..\lib\XPlot.Plotly.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
