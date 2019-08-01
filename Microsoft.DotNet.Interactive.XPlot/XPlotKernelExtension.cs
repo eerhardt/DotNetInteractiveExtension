@@ -2,15 +2,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Data;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Rendering;
 using XPlot.Plotly;
+using static Microsoft.DotNet.Interactive.Rendering.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.XPlot
 {
@@ -22,18 +27,50 @@ namespace Microsoft.DotNet.Interactive.XPlot
         {
             KernelBase kernelBase = (KernelBase)kernel;
 
+            Formatter<DataFrame>.Register((df, writer) =>
+            {
+                var headers = new List<dynamic>();
+                headers.Add(th(i("index")));
+                headers.AddRange(df.Columns.Select(c => th(c)));
+
+                var rows = new List<List<dynamic>>();
+
+                for (var i = 0; i < Math.Min(15, df.RowCount); i++)
+                {
+                    var cells = new List<dynamic>();
+
+                    cells.Add(td(i));
+
+                    foreach (object obj in df[i])
+                    {
+                        cells.Add(td(obj));
+                    }
+
+                    rows.Add(cells);
+                }
+
+                PocketView t = table(
+                    thead(
+                        headers
+                    ),
+                    tbody(
+                        rows.Select(
+                            r => tr(r))));
+
+                writer.Write(t);
+            }, "text/html");
+
             kernelBase.Pipeline.AddMiddleware(
                 (command, pipelineContext, next) =>
                     command switch
-                    {
+                        {
                         SubmitCode submitCode =>
-                            HandleSubmitCode(
-                                submitCode,
-                                pipelineContext,
-                                next),
-
+                        HandleSubmitCode(
+                            submitCode,
+                            pipelineContext,
+                            next),
                         _ => next(command, pipelineContext)
-                    });
+                        });
 
             HookAssemblyLoad();
             return Task.CompletedTask;
@@ -91,9 +128,9 @@ namespace Microsoft.DotNet.Interactive.XPlot
                 string js = GetPlotlyJS();
 
                 var formattedValues = new List<FormattedValue>
-                    {
-                        new FormattedValue("text/html", js)
-                    };
+                {
+                    new FormattedValue("text/html", js)
+                };
 
                 invocationContext.OnNext(
                     new ValueProduced(
