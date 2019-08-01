@@ -15,12 +15,9 @@
 
   <ItemGroup>
     <Reference Include="..\lib\Microsoft.DotNet.Interactive.dll" />
-    <Reference Include="Microsoft.Data.DataFrame">
-      <HintPath>..\lib\Microsoft.Data.DataFrame.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.DotNet.Interactive.Rendering">
-      <HintPath>..\lib\Microsoft.DotNet.Interactive.Rendering.dll</HintPath>
-    </Reference>
+    <Reference Include="..\lib\Microsoft.ML.DataView.dll" />
+    <Reference Include="..\lib\Microsoft.Data.DataFrame.dll" />
+    <Reference Include="..\lib\Microsoft.DotNet.Interactive.Rendering.dll" />
     <None Include="..\lib\XPlot.Plotly.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

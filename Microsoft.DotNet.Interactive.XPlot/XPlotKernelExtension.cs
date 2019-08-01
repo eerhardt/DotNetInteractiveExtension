@@ -26,39 +26,7 @@ namespace Microsoft.DotNet.Interactive.XPlot
         public Task OnLoadAsync(IKernel kernel)
         {
             KernelBase kernelBase = (KernelBase)kernel;
-
-            Formatter<DataFrame>.Register((df, writer) =>
-            {
-                var headers = new List<dynamic>();
-                headers.Add(th(i("index")));
-                headers.AddRange(df.Columns.Select(c => th(c)));
-
-                var rows = new List<List<dynamic>>();
-
-                for (var i = 0; i < Math.Min(15, df.RowCount); i++)
-                {
-                    var cells = new List<dynamic>();
-
-                    cells.Add(td(i));
-
-                    foreach (object obj in df[i])
-                    {
-                        cells.Add(td(obj));
-                    }
-
-                    rows.Add(cells);
-                }
-
-                PocketView t = table(
-                    thead(
-                        headers
-                    ),
-                    tbody(
-                        rows.Select(
-                            r => tr(r))));
-
-                writer.Write(t);
-            }, "text/html");
+            HookAssemblyLoad();
 
             kernelBase.Pipeline.AddMiddleware(
                 (command, pipelineContext, next) =>
@@ -72,7 +40,6 @@ namespace Microsoft.DotNet.Interactive.XPlot
                         _ => next(command, pipelineContext)
                         });
 
-            HookAssemblyLoad();
             return Task.CompletedTask;
         }
 
@@ -85,7 +52,14 @@ namespace Microsoft.DotNet.Interactive.XPlot
         private Assembly LoadContext_Resolving(AssemblyLoadContext context, AssemblyName assemblyName)
         {
             string currentAssemblyDirectory = Path.GetDirectoryName(typeof(XPlotKernelExtension).Assembly.Location);
-            return context.LoadFromAssemblyPath(Path.Combine(currentAssemblyDirectory, $"{assemblyName.Name}.dll"));
+
+            var path = Path.Combine(currentAssemblyDirectory, $"{assemblyName.Name}.dll");
+            if (File.Exists(path))
+            {
+                return context.LoadFromAssemblyPath(path);
+            }
+
+            return null;
         }
 
         private async Task HandleSubmitCode(
@@ -93,6 +67,8 @@ namespace Microsoft.DotNet.Interactive.XPlot
             KernelPipelineContext pipelineContext,
             KernelPipelineContinuation next)
         {
+            EnsureDataFrameFormatter();
+
             pipelineContext.OnExecute(invocationContext =>
             {
                 XPlotExtensions.OnShow = chart =>
@@ -119,6 +95,48 @@ namespace Microsoft.DotNet.Interactive.XPlot
 
             await next(submitCode, pipelineContext)
                 .ConfigureAwait(false);
+        }
+
+        private bool _dataFrameFormatterInit = false;
+        private void EnsureDataFrameFormatter()
+        {
+            if (!_dataFrameFormatterInit)
+            {
+                Formatter<DataFrame>.Register((df, writer) =>
+                {
+                    var headers = new List<dynamic>();
+                    headers.Add(th(i("index")));
+                    headers.AddRange(df.Columns.Select(c => th(c)));
+
+                    var rows = new List<List<dynamic>>();
+
+                    for (var i = 0; i < Math.Min(15, df.RowCount); i++)
+                    {
+                        var cells = new List<dynamic>();
+
+                        cells.Add(td(i));
+
+                        foreach (object obj in df[i])
+                        {
+                            cells.Add(td(obj));
+                        }
+
+                        rows.Add(cells);
+                    }
+
+                    PocketView t = table(
+                        thead(
+                            headers
+                        ),
+                        tbody(
+                            rows.Select(
+                                r => tr(r))));
+
+                    writer.Write(t);
+                }, "text/html");
+
+                _dataFrameFormatterInit = true;
+            }
         }
 
         private void EnsureJSInitialized(SubmitCode submitCode, KernelInvocationContext invocationContext)
