@@ -2,11 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Resources;
 using System.Runtime.Loader;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +16,9 @@ namespace Microsoft.DotNet.Interactive.XPlot
 {
     public class XPlotKernelExtension : IKernelExtension
     {
-        public async Task OnLoadAsync(IKernel kernel)
+        private bool _jsInitialized = false;
+
+        public Task OnLoadAsync(IKernel kernel)
         {
             KernelBase kernelBase = (KernelBase)kernel;
 
@@ -36,64 +36,7 @@ namespace Microsoft.DotNet.Interactive.XPlot
                     });
 
             HookAssemblyLoad();
-            await UsePlotlyJS(kernelBase);
-        }
-
-        public async static Task UsePlotlyJS(KernelBase kernel)
-        {
-            const string prePlotlyInclude = @"
-<script type=""text/javascript"">
-var require_save = require;
-var requirejs_save = requirejs;
-var define_save = define;
-var MathJax_save = MathJax;
-MathJax = require = requirejs = define = undefined;
-";
-
-            const string postPlotlyInclude = @"
-require = require_save;
-requirejs = requirejs_save;
-define = define_save;
-MathJax = MathJax_save;
-function ifsharpMakeImage(gd, fmt)
-{
-                        return Plotly.toImage(gd, { format: fmt})
-        .then(function(url) {
-                var img = document.createElement('img');
-                img.setAttribute('src', url);
-                var div = document.createElement('div');
-                div.appendChild(img);
-                gd.parentNode.replaceChild(div, gd);
-            });
-        }
-        function ifsharpMakePng(gd)
-        {
-            var fmt =
-                (document.documentMode || / Edge /.test(navigator.userAgent)) ?
-                    'svg' : 'png';
-            return ifsharpMakeImage(gd, fmt);
-        }
-        function ifsharpMakeSvg(gd)
-        {
-            return ifsharpMakeImage(gd, 'svg');
-        }
-</script>
-";
-            StringBuilder html = new StringBuilder();
-            string plotlyjs;
-            using (Stream stream = typeof(XPlotKernelExtension).Assembly.GetManifestResourceStream("Microsoft.DotNet.Interactive.XPlot.plotly-latest.min.js"))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                plotlyjs = reader.ReadToEnd();
-            }
-
-            html.Append(prePlotlyInclude);
-            html.Append(plotlyjs);
-            html.Append(postPlotlyInclude);
-            string plotlyJsHtml = html.ToString();
-
-            await kernel.SendAsync(
-                new DisplayValue(new FormattedValue("text/html", plotlyJsHtml)));
+            return Task.CompletedTask;
         }
 
         private void HookAssemblyLoad()
@@ -117,6 +60,8 @@ function ifsharpMakeImage(gd, fmt)
             {
                 XPlotExtensions.OnShow = chart =>
                 {
+                    EnsureJSInitialized(submitCode, invocationContext);
+
                     string chartHtml = chart.GetInlineHtml();
 
                     var formattedValues = new List<FormattedValue>
@@ -135,7 +80,85 @@ function ifsharpMakeImage(gd, fmt)
                 return Task.CompletedTask;
             });
 
-            await next(submitCode, pipelineContext);
+            await next(submitCode, pipelineContext)
+                .ConfigureAwait(false);
+        }
+
+        private void EnsureJSInitialized(SubmitCode submitCode, KernelInvocationContext invocationContext)
+        {
+            if (!_jsInitialized)
+            {
+                string js = GetPlotlyJS();
+
+                var formattedValues = new List<FormattedValue>
+                    {
+                        new FormattedValue("text/html", js)
+                    };
+
+                invocationContext.OnNext(
+                    new ValueProduced(
+                        js,
+                        submitCode,
+                        false,
+                        formattedValues));
+
+                _jsInitialized = true;
+            }
+        }
+
+        private static string GetPlotlyJS()
+        {
+            const string prePlotlyInclude = @"
+<script type=""text/javascript"">
+var require_save = require;
+var requirejs_save = requirejs;
+var define_save = define;
+var MathJax_save = MathJax;
+MathJax = require = requirejs = define = undefined;
+";
+
+            const string postPlotlyInclude = @"
+require = require_save;
+requirejs = requirejs_save;
+define = define_save;
+MathJax = MathJax_save;
+function ifsharpMakeImage(gd, fmt)
+{
+    return Plotly.toImage(gd, { format: fmt})
+        .then(function(url) {
+                var img = document.createElement('img');
+                img.setAttribute('src', url);
+                var div = document.createElement('div');
+                div.appendChild(img);
+                gd.parentNode.replaceChild(div, gd);
+            });
+        }
+        function ifsharpMakePng(gd)
+        {
+            var fmt =
+                (document.documentMode || / Edge /.test(navigator.userAgent)) ?
+                    'svg' : 'png';
+            return ifsharpMakeImage(gd, fmt);
+        }
+        function ifsharpMakeSvg(gd)
+        {
+            return ifsharpMakeImage(gd, 'svg');
+        }
+</script>
+";
+            StringBuilder js = new StringBuilder();
+            string plotlyjs;
+            using (Stream stream = typeof(XPlotKernelExtension).Assembly.GetManifestResourceStream("Microsoft.DotNet.Interactive.XPlot.plotly-latest.min.js"))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                plotlyjs = reader.ReadToEnd();
+            }
+
+            js.Append(prePlotlyInclude);
+            js.Append(plotlyjs);
+            js.Append(postPlotlyInclude);
+
+            return js.ToString();
         }
     }
 }
