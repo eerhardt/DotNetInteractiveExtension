@@ -15,9 +15,16 @@
 
   <ItemGroup>
     <Reference Include="..\lib\Microsoft.DotNet.Interactive.dll" />
+    <Reference Include="..\lib\Microsoft.ML.DataView.dll" />
+    <Reference Include="..\lib\Microsoft.Data.DataFrame.dll" />
+    <Reference Include="..\lib\Microsoft.DotNet.Interactive.Rendering.dll" />
     <None Include="..\lib\XPlot.Plotly.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
   </ItemGroup>
 
 </Project>
