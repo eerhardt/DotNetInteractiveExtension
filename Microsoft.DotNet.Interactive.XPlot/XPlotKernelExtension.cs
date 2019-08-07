@@ -21,8 +21,6 @@ namespace Microsoft.DotNet.Interactive.XPlot
 {
     public class XPlotKernelExtension : IKernelExtension
     {
-        private bool _jsInitialized = false;
-
         public Task OnLoadAsync(IKernel kernel)
         {
             KernelBase kernelBase = (KernelBase)kernel;
@@ -73,9 +71,7 @@ namespace Microsoft.DotNet.Interactive.XPlot
             {
                 XPlotExtensions.OnShow = chart =>
                 {
-                    EnsureJSInitialized(submitCode, invocationContext);
-
-                    string chartHtml = chart.GetInlineHtml();
+                    string chartHtml = GetChartHtml(chart);
 
                     var formattedValues = new List<FormattedValue>
                     {
@@ -139,81 +135,28 @@ namespace Microsoft.DotNet.Interactive.XPlot
             }
         }
 
-        private void EnsureJSInitialized(SubmitCode submitCode, KernelInvocationContext invocationContext)
+        private string GetChartHtml(PlotlyChart chart)
         {
-            if (!_jsInitialized)
-            {
-                string js = GetPlotlyJS();
+            string chartHtml = chart.GetInlineHtml();
 
-                var formattedValues = new List<FormattedValue>
-                {
-                    new FormattedValue("text/html", js)
-                };
+            int scriptStart = chartHtml.IndexOf("<script>") + "<script>".Length;
+            int scriptEnd = chartHtml.IndexOf("</script>");
 
-                invocationContext.OnNext(
-                    new ValueProduced(
-                        js,
-                        submitCode,
-                        false,
-                        formattedValues));
+            StringBuilder html = new StringBuilder(chartHtml.Length);
+            html.Append(chartHtml.AsSpan().Slice(0, scriptStart));
 
-                _jsInitialized = true;
-            }
-        }
+            html.Append(@"
+require.config({paths:{plotly:'https://cdn.plot.ly/plotly-latest.min'}});
+require(['plotly'], function(Plotly) { 
+");
 
-        private static string GetPlotlyJS()
-        {
-            const string prePlotlyInclude = @"
-<script type=""text/javascript"">
-var require_save = require;
-var requirejs_save = requirejs;
-var define_save = define;
-var MathJax_save = MathJax;
-MathJax = require = requirejs = define = undefined;
-";
+            html.Append(chartHtml.AsSpan().Slice(scriptStart + 1, scriptEnd - scriptStart - 1));
 
-            const string postPlotlyInclude = @"
-require = require_save;
-requirejs = requirejs_save;
-define = define_save;
-MathJax = MathJax_save;
-function ifsharpMakeImage(gd, fmt)
-{
-    return Plotly.toImage(gd, { format: fmt})
-        .then(function(url) {
-                var img = document.createElement('img');
-                img.setAttribute('src', url);
-                var div = document.createElement('div');
-                div.appendChild(img);
-                gd.parentNode.replaceChild(div, gd);
-            });
-        }
-        function ifsharpMakePng(gd)
-        {
-            var fmt =
-                (document.documentMode || / Edge /.test(navigator.userAgent)) ?
-                    'svg' : 'png';
-            return ifsharpMakeImage(gd, fmt);
-        }
-        function ifsharpMakeSvg(gd)
-        {
-            return ifsharpMakeImage(gd, 'svg');
-        }
-</script>
-";
-            StringBuilder js = new StringBuilder();
-            string plotlyjs;
-            using (Stream stream = typeof(XPlotKernelExtension).Assembly.GetManifestResourceStream("Microsoft.DotNet.Interactive.XPlot.plotly-latest.min.js"))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                plotlyjs = reader.ReadToEnd();
-            }
+            html.AppendLine(@"});");
 
-            js.Append(prePlotlyInclude);
-            js.Append(plotlyjs);
-            js.Append(postPlotlyInclude);
+            html.Append(chartHtml.AsSpan().Slice(scriptEnd));
 
-            return js.ToString();
+            return html.ToString();
         }
     }
 }
