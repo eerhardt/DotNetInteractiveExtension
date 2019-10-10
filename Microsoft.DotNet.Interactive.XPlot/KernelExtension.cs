@@ -5,20 +5,16 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Rendering;
 using static Microsoft.DotNet.Interactive.Rendering.PocketViewTags;
-using static Microsoft.ML.Interactive.XPlot.PocketViewTagsExtensions;
+using static Microsoft.DotNet.Interactive.XPlot.PocketViewTagsExtensions;
 
-namespace Microsoft.ML.Interactive.XPlot
+namespace Microsoft.DotNet.Interactive.XPlot
 {
-    public class DecisionTreeData
-    {
-
-    }
-
     public static class PocketViewTagsExtensions
     {
         public static dynamic svg => PocketViewTags._.svg;
@@ -97,28 +93,13 @@ else {
 
         private static string GenerateData(DecisionTreeData tree)
         {
-            return @"{ 
-                label: ""f1 > 2"", 
-                data: 1.0,
-                children: [
-                    { 
-                        value: 51 ,
-                        data: 0.1
-                    }, 
-                    { 
-                        label: ""f1 > 2"", 
-                        data:0.9,
-                        children: [
-                            { 
-                                value: 1, 
-                                data:0.8
-                            }, 
-                            { 
-                                value: 2,
-                                data:0.1 
-                            }] 
-                        }] 
-                    }";
+            return JsonSerializer.Serialize(
+                tree.Root,
+                options: new JsonSerializerOptions()
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = true
+                });
         }
     }
 }
