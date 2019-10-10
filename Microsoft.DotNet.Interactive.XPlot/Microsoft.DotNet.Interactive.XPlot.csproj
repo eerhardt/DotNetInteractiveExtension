@@ -6,20 +6,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\XPlot.Extensions\XPlot.Extensions.csproj" />
+    <EmbeddedResource Include="RegressionTree.js" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="..\lib\Microsoft.DotNet.Interactive.dll" />
-    <Reference Include="..\lib\Microsoft.ML.DataView.dll" />
-    <Reference Include="..\lib\Microsoft.Data.DataFrame.dll" />
     <Reference Include="..\lib\Microsoft.DotNet.Interactive.Rendering.dll" />
-    <None Include="..\lib\XPlot.Plotly.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.12" />
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
   </ItemGroup>
 
