@@ -18,6 +18,10 @@ COPY ./NotebookExamples/ ${HOME}/Notebooks/
 
 COPY ./NuGet.config ${HOME}/nuget.config
 
+# Copy source Code
+
+COPY ./Microsoft.DotNet.Interactive.XPlot/ ${HOME}/src/Microsoft.DotNet.Interactive.XPlot
+
 USER root
 RUN apt-get update
 RUN apt-get install -y curl
@@ -66,6 +70,11 @@ RUN echo "$PATH"
 
 # Install kernel specs
 RUN dotnet try jupyter install
+
+#build extensions
+RUN dotnet publish ${HOME}/src/Microsoft.DotNet.Interactive.XPlot/Microsoft.DotNet.Interactive.XPlot.csproj -o ${HOME}/Notebooks/extensions/Microsoft.DotNet.Interactive.XPlot
+
+
 
 # Set root to Notebooks
 WORKDIR ${HOME}/Notebooks/
