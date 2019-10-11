@@ -75,7 +75,7 @@ RUN echo "$PATH"
 RUN dotnet try jupyter install
 
 # Build extensions
-RUN dotnet publish ${HOME}/src/ -c Release -o ${HOME}/Notebooks/extensions/Microsoft.DotNet.Interactive.XPlot
+RUN dotnet publish ${HOME}/src/Microsoft.DotNet.Interactive.XPlot -c Release -o ${HOME}/Notebooks/extensions/Microsoft.DotNet.Interactive.XPlot
 
 # Publish nuget if there is any
 # WORKDIR ${HOME}/src/

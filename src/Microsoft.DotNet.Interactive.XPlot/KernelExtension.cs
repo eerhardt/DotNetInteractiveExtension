@@ -2,24 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Rendering;
-using static Microsoft.DotNet.Interactive.Rendering.PocketViewTags;
-using static Microsoft.DotNet.Interactive.XPlot.PocketViewTagsExtensions;
 
 namespace Microsoft.DotNet.Interactive.XPlot
 {
-    public static class PocketViewTagsExtensions
-    {
-        public static dynamic svg => PocketViewTags._.svg;
-    }
-
     public class MlKernelExtension : IKernelExtension
     {
         public Task OnLoadAsync(IKernel kernel)
@@ -70,9 +61,9 @@ var dotnet_regressiontree_renderTree = function() {
     var mlNetRequire = requirejs.config({context:'microsoft.ml-1.3.1',paths:{d3:'https://d3js.org/d3.v5.min'}});
     mlNetRequire(['d3'], function(d3) {");
             newScript.AppendLine();
-            newScript.Append($"var sampleData = {GenerateData(tree)};");
+            newScript.Append($"var treeData = {GenerateData(tree)};");
             newScript.AppendLine();
-            newScript.Append($@"dnRegressionTree.render(d3.select(""#{renderingId}""), sampleData, d3);");
+            newScript.Append($@"dnRegressionTree.render(d3.select(""#{renderingId}""), treeData, d3);");
             newScript.AppendLine();
             newScript.AppendLine(@"});
 };
