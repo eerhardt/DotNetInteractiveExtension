@@ -22,6 +22,9 @@ COPY ./NuGet.config ${HOME}/nuget.config
 
 COPY ./Microsoft.DotNet.Interactive.XPlot/ ${HOME}/src/Microsoft.DotNet.Interactive.XPlot
 
+RUN mkdir ${HOME}/packages/
+RUN mkdir ${HOME}/localNuget/
+
 USER root
 RUN apt-get update
 RUN apt-get install -y curl
@@ -74,7 +77,10 @@ RUN dotnet try jupyter install
 #build extensions
 RUN dotnet publish ${HOME}/src/Microsoft.DotNet.Interactive.XPlot/Microsoft.DotNet.Interactive.XPlot.csproj -o ${HOME}/Notebooks/extensions/Microsoft.DotNet.Interactive.XPlot
 
+WORKDIR ${HOME}/src/
+RUN dotnet nuget push **/*.nupkg -s ${HOME}/localNuget/
 
+RUN rm -fr ${HOME}/src/
 
 # Set root to Notebooks
 WORKDIR ${HOME}/Notebooks/
