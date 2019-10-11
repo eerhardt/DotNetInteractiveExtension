@@ -20,7 +20,7 @@ COPY ./NuGet.config ${HOME}/nuget.config
 
 # Copy source Code
 
-COPY ./Microsoft.DotNet.Interactive.XPlot/ ${HOME}/src/Microsoft.DotNet.Interactive.XPlot
+COPY ./src/ ${HOME}/src/
 
 RUN mkdir ${HOME}/packages/
 RUN mkdir ${HOME}/localNuget/
@@ -74,11 +74,12 @@ RUN echo "$PATH"
 # Install kernel specs
 RUN dotnet try jupyter install
 
-#build extensions
-RUN dotnet publish ${HOME}/src/Microsoft.DotNet.Interactive.XPlot/Microsoft.DotNet.Interactive.XPlot.csproj -o ${HOME}/Notebooks/extensions/Microsoft.DotNet.Interactive.XPlot
+# Build extensions
+RUN dotnet publish ${HOME}/src/ -c Release -o ${HOME}/Notebooks/extensions/Microsoft.DotNet.Interactive.XPlot
 
-WORKDIR ${HOME}/src/
-RUN dotnet nuget push **/*.nupkg -s ${HOME}/localNuget/
+# Publish nuget if there is any
+# WORKDIR ${HOME}/src/
+# RUN dotnet nuget push **/*.nupkg -s ${HOME}/localNuget/
 
 RUN rm -fr ${HOME}/src/
 
