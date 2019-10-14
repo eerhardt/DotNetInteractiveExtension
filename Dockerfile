@@ -10,21 +10,6 @@ ENV HOME /home/${NB_USER}
 
 WORKDIR ${HOME}
 
-# Copy notebooks
-
-COPY ./NotebookExamples/ ${HOME}/Notebooks/
-
-# Copy package sources
-
-COPY ./NuGet.config ${HOME}/nuget.config
-
-# Copy source Code
-
-COPY ./src/ ${HOME}/src/
-
-RUN mkdir ${HOME}/packages/
-RUN mkdir ${HOME}/localNuget/
-
 USER root
 RUN apt-get update
 RUN apt-get install -y curl
@@ -61,6 +46,16 @@ ENV DOTNET_RUNNING_IN_CONTAINER=true \
 
 # Trigger first run experience by running arbitrary cmd
 RUN dotnet help
+
+# Copy notebooks, package sources, and source code
+# NOTE: Do this before installing dotnet-try so we get the
+# latest dotnet-try everytime we change sources.
+COPY ./NotebookExamples/ ${HOME}/Notebooks/
+COPY ./NuGet.config ${HOME}/nuget.config
+COPY ./src/ ${HOME}/src/
+
+RUN mkdir ${HOME}/packages/
+RUN mkdir ${HOME}/localNuget/
 
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
