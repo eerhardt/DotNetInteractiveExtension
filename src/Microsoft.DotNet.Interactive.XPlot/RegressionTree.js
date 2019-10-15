@@ -1,22 +1,18 @@
 ﻿var dnRegressionTree = (function () {
     const blockHeight = 60;
-    const blockWidth = 100;
+    const blockWidth = 250;
     const dotSize = 10;
 
     function renderRegressionTree(renderTarget, regressionTree, d3) {
-
-        //************************************* Options******************************************************//
-
-        const strokeness = 120; // the degree of separation between the nodes 
-
-        /****************************************************************************************************** */
-
-        let margin = { top: 20, right: 120, bottom: 20, left: 180 };
-        let width = 2000 + 960 - margin.right - margin.left;
-        let height = 800 - margin.top - margin.bottom;
+    
 
         let root = d3.hierarchy(regressionTree);
-        
+        let treeSize = [count_leaves(root) * blockHeight * 1.3, getDepth(root) * blockWidth * 2];
+
+        let margin = { top: 20, right: 120, bottom: 20, left: 180 };
+        let width = treeSize[1] - margin.right - margin.left;
+        let height = treeSize[0] - margin.top - margin.bottom;
+
         renderTarget
             .attr("width", getDepth(root) * width / 8 + margin.right + margin.left)
             .attr("height", height + margin.top + margin.bottom)
@@ -26,25 +22,18 @@
 
         let rootTransform = renderTarget.select("g");
 
-        let zoom = d3.zoom().on("zoom", () =>{
+        let zoom = d3.zoom().on("zoom", () => {
             rootTransform.attr("transform", d3.event.transform);
         });
 
         renderTarget.call(zoom);
 
-        renderTarget.on("dblclick.zoom", () => {
-            let identity = d3.zoomIdentity.translate(margin.left, margin.top);
-            rootTransform
-                .transition()
-                .duration(750)
-                .call(zoom.transform, identity);
-        });
-
         let toolTip = createToolTip(renderTarget);
 
-        let treeLayout = d3.tree()
-            .separation((a, b) => ((a.parent == root) && (b.parent == root)) ? strokeness : strokeness)
-            .size([height, getDepth(root) * (blockWidth * 1.8)]);
+       
+        let treeLayout = d3
+            .tree()
+            .size(treeSize);
 
 
         root.dx = blockHeight / 2;
@@ -106,6 +95,32 @@
             });
         }
         return 1 + depth;
+    }
+
+   
+    function count_leaves(treeNode) {
+        let count = 0;
+        function count_leaves_r(node) {
+            if (node.children) {
+                //go through all its children
+                for (var i = 0; i < node.children.length; i++) {
+                    //if the current child in the for loop has children of its own
+                    //call recurse again on it to decend the whole tree
+                    if (node.children[i].children) {
+                        count_leaves_r(node.children[i]);
+                    }
+                    //if not then it is a leaf so we count it
+                    else {
+                        count++;
+                    }
+                }
+            }
+        }
+
+        count_leaves_r(treeNode);
+
+        return count;
+
     }
 
     function createToolTip(renderTarget) {
@@ -182,7 +197,10 @@
             .attr("class", "nodeBlock")
             .attr("d", rightRoundedRect(boxX, boxy, boxW, boxH, boxR))
             .attr("fill", "white")
-            .attr("stroke", "black");
+            .attr("stroke", "black").on("click", d => {
+                toggleChildren(d);
+                update(root, renderTarget, treeLayout);
+            });
 
 
         // data flow part
@@ -198,12 +216,16 @@
             .attr("class", "nodeText")
             .attr("user-select", "none")
             .attr("dy", "0.31em")
-            .text(d => d.data.label ? d.data.label : d.data.value)
-            .filter(d => d.children)
+            .attr("dx", blockWidth * 0.4)
+            .text(d => d.data.label ? d.data.label : d.data.value)            
             .attr("text-anchor", "end")
+            .attr("stroke-width", "1px")
+            .attr("stroke", "white")
             .clone(true)
-            .lower()
-            .attr("stroke", "white");
+            .attr("stroke-width", "none")
+            .attr("stroke", "none");
+            
+            
     }
     function update(root, renderTarget, treeLayout) {
         treeLayout(root);
