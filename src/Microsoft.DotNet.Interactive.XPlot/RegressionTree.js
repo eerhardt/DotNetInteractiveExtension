@@ -7,24 +7,8 @@
 
         //************************************* Options******************************************************//
 
-        const tree_branch = false; // if the thickness of the branches depend on the value of targt + color * /
-        const tree_branch_parent = true; // true: thickness from the root if not the direct parent
-        const tree_branch_color = "black";
         const strokeness = 120; // the degree of separation between the nodes 
-        const default_strokeness = 50;
-        const hover_percent_parent = false; // if the display percentage depends on the direct parent or the root
-        const square = false;
-        const rect_percent = true; //display the percentage or the value in the small rectangles of the labels 
-        const value_percent_top = true; /// if we display the value and the percentage above the rectangle /
 
-        const dict_leaf_y = { 1: 0, 2: -17.5, 3: -35, 4: -52.5, 5: -70, 6: -87.5, 6: -105, 7: -122.5, 8: -140, 9: -157.5, 10: -175 };
-
-        let label_names;
-
-        let TOTAL_SIZE;
-        let default_colors = [
-            "#c25975", "#d26bff", "#2d5a47", "#093868", "#fcdfe6", "#94a2fa", "#faec94", "#decaee", "#daeeca", "#b54c0a", "#dc1818", "#18dcdc", "#000000", "#340000", "#86194c", "#fef65b", "#ff9b6f", "#491b47", "#171717", "#e8efec", "#1c6047", "#a2bae0", "#4978c3", "#f8fee0", "#dcfb66", "#91fb66", "#29663b", "#b4b7be", "#0088b2", "#88b200", "#c43210", "#f06848", "#f0bc48", "#d293a2", "#cccccc", "#59596a", "#fafae6", "#ffc125", "#ff4e50", "#f0e6fa", "#f6c1c3", "#363636"
-        ];
         /****************************************************************************************************** */
 
         let margin = { top: 20, right: 120, bottom: 20, left: 180 };
@@ -32,7 +16,7 @@
         let height = 800 - margin.top - margin.bottom;
 
         let root = d3.hierarchy(regressionTree);
-
+        
         renderTarget
             .attr("width", getDepth(root) * width / 8 + margin.right + margin.left)
             .attr("height", height + margin.top + margin.bottom)
@@ -41,6 +25,20 @@
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         let rootTransform = renderTarget.select("g");
+
+        let zoom = d3.zoom().on("zoom", () =>{
+            rootTransform.attr("transform", d3.event.transform);
+        });
+
+        renderTarget.call(zoom);
+
+        renderTarget.on("dblclick.zoom", () => {
+            let identity = d3.zoomIdentity.translate(margin.left, margin.top);
+            rootTransform
+                .transition()
+                .duration(750)
+                .call(zoom.transform, identity);
+        });
 
         let toolTip = createToolTip(renderTarget);
 
@@ -198,6 +196,7 @@
         node
             .append("text")
             .attr("class", "nodeText")
+            .attr("user-select", "none")
             .attr("dy", "0.31em")
             .text(d => d.data.label ? d.data.label : d.data.value)
             .filter(d => d.children)
