@@ -168,7 +168,7 @@
             });
     }
 
-    function updateNodes(root, renderTarget) {
+    function updateNodes(root, renderTarget, d3) {
         let node = renderTarget
             .select("g.nodeLayer")
             .selectAll("g.nodeRootTransform")
@@ -188,7 +188,7 @@
             .attr("r", d => (d.children || d._children) ? dotSize : 0)
             .on("click", d => {
                 toggleChildren(d);
-                update(root, renderTarget);
+                update(root, renderTarget, d3);
             });
 
 
@@ -207,7 +207,7 @@
             .attr("fill", "white")
             .attr("stroke", "black").on("click", d => {
                 toggleChildren(d);
-                update(root, renderTarget);
+                update(root, renderTarget, d3);
             });
 
 
@@ -240,7 +240,7 @@
         let treeLayout = d3.tree().size(treeSize);
         treeLayout(root);
         updateLinks(root, renderTarget);
-        updateNodes(root, renderTarget);
+        updateNodes(root, renderTarget, d3);
     }
 
     return {
