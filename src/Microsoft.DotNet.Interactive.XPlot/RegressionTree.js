@@ -4,18 +4,18 @@
     const dotSize = 10;
 
     function renderRegressionTree(renderTarget, regressionTree, d3) {
-    
+
 
         let root = d3.hierarchy(regressionTree);
-        let treeSize = [count_leaves(root) * blockHeight * 1.3, getDepth(root) * blockWidth * 2.5];
+        let treeSize = getTreeBoundaries(root);
 
         let margin = { top: 20, right: 120, bottom: 20, left: 180 };
         let width = treeSize[1] - margin.right - margin.left;
         let height = treeSize[0] - margin.top - margin.bottom;
 
+        let viewBox = [0,0,  getDepth(root) * width / 8 + margin.right + margin.left, height + margin.top + margin.bottom];
         renderTarget
-            .attr("width", getDepth(root) * width / 8 + margin.right + margin.left)
-            .attr("height", height + margin.top + margin.bottom)
+            .attr("viewBox", `${viewBox[0]} ${viewBox[1]} ${viewBox[2]} ${viewBox[3]}`)
             .append("g")
             .attr("class", "rootTransform")
             .attr("transform", `translate(${0},${0} )`);
@@ -30,7 +30,7 @@
 
         let toolTip = createToolTip(renderTarget);
 
-       
+
         let treeLayout = d3
             .tree()
             .size(treeSize);
@@ -51,8 +51,13 @@
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3);
 
-        root.children.forEach(collapse);
+        root.children.forEach(collapse);        
         update(root, rootTransform);
+        let currentTreeSize = getTreeBoundaries(root);
+        let initialTranform = d3.zoomIdentity.translate(currentTreeSize[0]/2, currentTreeSize[1]/2).scale((treeSize[0] /currentTreeSize[0])*0.2);
+      
+        zoom.transform(rootTransform, initialTranform);
+        renderTarget.property("__zoom", initialTranform);
     }
 
     function collapse(d) {
@@ -97,7 +102,10 @@
         return 1 + depth;
     }
 
-   
+    function getTreeBoundaries(treeNode) {
+        return [count_leaves(treeNode) * blockHeight * 1.3, getDepth(treeNode) * blockWidth * 2.5];
+    }
+
     function count_leaves(treeNode) {
         let count = 0;
         function count_leaves_r(node) {
@@ -217,18 +225,18 @@
             .attr("user-select", "none")
             .attr("dy", "0.31em")
             .attr("dx", blockWidth * 0.4)
-            .text(d => d.data.label ? d.data.label : d.data.value)            
+            .text(d => d.data.label ? d.data.label : d.data.value)
             .attr("text-anchor", "end")
             .attr("stroke-width", "1px")
             .attr("stroke", "white")
             .clone(true)
             .attr("stroke-width", "none")
             .attr("stroke", "none");
-            
-            
+
+
     }
     function update(root, renderTarget) {
-        let treeSize = [count_leaves(root) * blockHeight * 1.3, getDepth(root) * blockWidth * 2];
+        let treeSize = getTreeBoundaries(root);
         let treeLayout = d3.tree().size(treeSize);
         treeLayout(root);
         updateLinks(root, renderTarget);
