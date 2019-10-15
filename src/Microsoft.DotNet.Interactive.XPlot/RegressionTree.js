@@ -13,7 +13,7 @@
         let width = treeSize[1] - margin.right - margin.left;
         let height = treeSize[0] - margin.top - margin.bottom;
 
-        let viewBox = [0,0,  getDepth(root) * width / 8 + margin.right + margin.left, height + margin.top + margin.bottom];
+        let viewBox = [0, 0, getDepth(root) * width / 8 + margin.right + margin.left, height + margin.top + margin.bottom];
         renderTarget
             .attr("viewBox", `${viewBox[0]} ${viewBox[1]} ${viewBox[2]} ${viewBox[3]}`)
             .append("g")
@@ -51,11 +51,11 @@
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3);
 
-        root.children.forEach(collapse);        
-        update(root, rootTransform);
+        root.children.forEach(collapse);
+        update(root, rootTransform, d3);
         let currentTreeSize = getTreeBoundaries(root);
-        let initialTranform = d3.zoomIdentity.translate(currentTreeSize[0]/2, currentTreeSize[1]/2).scale((treeSize[0] /currentTreeSize[0])*0.2);
-      
+        let initialTranform = d3.zoomIdentity.translate(currentTreeSize[0] / 2, currentTreeSize[1] / 2).scale((treeSize[0] / currentTreeSize[0]) * 0.2);
+
         zoom.transform(rootTransform, initialTranform);
         renderTarget.property("__zoom", initialTranform);
     }
@@ -235,7 +235,7 @@
 
 
     }
-    function update(root, renderTarget) {
+    function update(root, renderTarget, d3) {
         let treeSize = getTreeBoundaries(root);
         let treeLayout = d3.tree().size(treeSize);
         treeLayout(root);
