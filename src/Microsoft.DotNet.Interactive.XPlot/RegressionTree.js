@@ -7,7 +7,7 @@
     
 
         let root = d3.hierarchy(regressionTree);
-        let treeSize = [count_leaves(root) * blockHeight * 1.3, getDepth(root) * blockWidth * 2];
+        let treeSize = [count_leaves(root) * blockHeight * 1.3, getDepth(root) * blockWidth * 2.5];
 
         let margin = { top: 20, right: 120, bottom: 20, left: 180 };
         let width = treeSize[1] - margin.right - margin.left;
@@ -18,7 +18,7 @@
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("class", "rootTransform")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            .attr("transform", `translate(${0},${0} )`);
 
         let rootTransform = renderTarget.select("g");
 
@@ -51,8 +51,8 @@
             .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3);
 
-        //root.children.forEach(collapse);
-        update(root, rootTransform, treeLayout);
+        root.children.forEach(collapse);
+        update(root, rootTransform);
     }
 
     function collapse(d) {
@@ -160,7 +160,7 @@
             });
     }
 
-    function updateNodes(root, renderTarget, treeLayout) {
+    function updateNodes(root, renderTarget) {
         let node = renderTarget
             .select("g.nodeLayer")
             .selectAll("g.nodeRootTransform")
@@ -180,7 +180,7 @@
             .attr("r", d => (d.children || d._children) ? dotSize : 0)
             .on("click", d => {
                 toggleChildren(d);
-                update(root, renderTarget, treeLayout);
+                update(root, renderTarget);
             });
 
 
@@ -199,7 +199,7 @@
             .attr("fill", "white")
             .attr("stroke", "black").on("click", d => {
                 toggleChildren(d);
-                update(root, renderTarget, treeLayout);
+                update(root, renderTarget);
             });
 
 
@@ -227,10 +227,12 @@
             
             
     }
-    function update(root, renderTarget, treeLayout) {
+    function update(root, renderTarget) {
+        let treeSize = [count_leaves(root) * blockHeight * 1.3, getDepth(root) * blockWidth * 2];
+        let treeLayout = d3.tree().size(treeSize);
         treeLayout(root);
         updateLinks(root, renderTarget);
-        updateNodes(root, renderTarget, treeLayout);
+        updateNodes(root, renderTarget);
     }
 
     return {
