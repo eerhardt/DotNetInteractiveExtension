@@ -54,7 +54,7 @@
         root.children.forEach(collapse);
         update(root, rootTransform, d3);
         let currentTreeSize = getTreeBoundaries(root);
-        let initialTranform = d3.zoomIdentity.translate(currentTreeSize[0] / 2, currentTreeSize[1] / 2).scale((treeSize[0] / currentTreeSize[0]) * 0.2);
+        let initialTranform = d3.zoomIdentity.translate(currentTreeSize[0] / 2, currentTreeSize[1] / 2).scale((treeSize[0] / currentTreeSize[0]) * 0.15);
 
         zoom.transform(rootTransform, initialTranform);
         renderTarget.property("__zoom", initialTranform);
