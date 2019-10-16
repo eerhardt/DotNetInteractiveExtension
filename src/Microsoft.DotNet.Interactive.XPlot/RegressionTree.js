@@ -103,7 +103,7 @@
     }
 
     function getTreeBoundaries(treeNode) {
-        return [count_leaves(treeNode) * blockHeight * 1.3, getDepth(treeNode) * blockWidth * 2.5];
+        return [count_leaves(treeNode) * blockHeight * 1.7, getDepth(treeNode) * blockWidth * 1.3];
     }
 
     function count_leaves(treeNode) {
