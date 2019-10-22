@@ -9,12 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="RegressionTree.js" />
+    <EmbeddedResource Include="RegressionTree.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="interactive-extensions/dotnet/cs" Visible="false" />
-    <None Include="$(OutputPath)\Microsoft.ML.DotNet.Interactive.dll" Pack="true" PackagePath="lib/netstandard2.0"/>
+    <None Include="$(OutputPath)\Microsoft.ML.DotNet.Interactive.dll" Pack="true" PackagePath="lib/netstandard2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.ML.DotNet.Interactive\Microsoft.ML.DotNet.Interactive.csproj" />
+    <ProjectReference Include="..\Microsoft.ML.DotNet.Interactive\Microsoft.ML.DotNet.Interactive.csproj" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

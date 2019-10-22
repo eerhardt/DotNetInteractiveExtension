@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
@@ -10,7 +11,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.ML.DotNet.Interactive
 {
-    internal static class DecisionTreeDataFormatting
+    public static class DecisionTreeDataFormatting
     {
         internal static string GenerateTreeView(DecisionTreeData tree)
         {
@@ -30,8 +31,9 @@ namespace Microsoft.ML.DotNet.Interactive
             var newScript = new StringBuilder();
             newScript.AppendLine("<script type=\"text/javascript\">");
 
-            var assembly = typeof(MlKernelExtension).Assembly;
-            var resourceStream = assembly.GetManifestResourceStream("Microsoft.DotNet.Interactive.XPlot.RegressionTree.js");
+            var assembly = typeof(DecisionTreeDataFormatting).Assembly;
+            var resourceName = assembly.GetManifestResourceNames().First(n => n.EndsWith("RegressionTree.js"));
+            var resourceStream = assembly.GetManifestResourceStream(resourceName);
             using (var reader = new StreamReader(resourceStream, Encoding.UTF8))
             {
                 newScript.AppendLine(reader.ReadToEnd());
