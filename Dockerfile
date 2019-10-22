@@ -68,11 +68,12 @@ RUN echo "$PATH"
 RUN dotnet try jupyter install
 
 # Build extensions
-RUN dotnet publish ${HOME}/src/Microsoft.DotNet.Interactive.XPlot -c Release -o ${HOME}/Notebooks/extensions/Microsoft.DotNet.Interactive.XPlot
+RUN dotnet build ${HOME}/src/Microsoft.ML.DotNet.Interactive.Extensions -c Release 
+RUN dotnet pack ${HOME}/src/Microsoft.ML.DotNet.Interactive.Extensions -c Release 
 
 # Publish nuget if there is any
-# WORKDIR ${HOME}/src/
-# RUN dotnet nuget push **/*.nupkg -s ${HOME}/localNuget/
+WORKDIR ${HOME}/src/
+RUN dotnet nuget push **/*.nupkg -s ${HOME}/localNuget/
 
 RUN rm -fr ${HOME}/src/
 
