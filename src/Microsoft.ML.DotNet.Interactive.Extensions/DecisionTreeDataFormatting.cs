@@ -4,30 +4,19 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 using HtmlAgilityPack;
-using Microsoft.DotNet.Interactive.Rendering;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.XPlot
+namespace Microsoft.ML.DotNet.Interactive
 {
-    public class MlKernelExtension : IKernelExtension
+    internal static class DecisionTreeDataFormatting
     {
-        public Task OnLoadAsync(IKernel kernel)
-        {
-            Formatter<DecisionTreeData>.Register((tree, writer) =>
-            {
-                writer.Write(GenerateTreeView(tree));
-            }, "text/html");
-
-            return Task.CompletedTask;
-        }
-
-        private string GenerateTreeView(DecisionTreeData tree)
+        internal static string GenerateTreeView(DecisionTreeData tree)
         {
             var newHtmlDocument = new HtmlDocument();
 
-            var renderingId = "a" + Guid.NewGuid().ToString();
+            var renderingId = $"a{Guid.NewGuid()}";
 
             newHtmlDocument.DocumentNode.ChildNodes.Add(HtmlNode.CreateNode($"<svg id=\"{renderingId}\"></svg>"));
             newHtmlDocument.DocumentNode.ChildNodes.Add(GetRenderingScript());
@@ -36,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.XPlot
             return newHtmlDocument.DocumentNode.WriteContentTo();
         }
 
-        private HtmlNode GetRenderingScript()
+        private static HtmlNode GetRenderingScript()
         {
             var newScript = new StringBuilder();
             newScript.AppendLine("<script type=\"text/javascript\">");
@@ -82,15 +71,16 @@ else {
             return HtmlNode.CreateNode(newScript.ToString());
         }
 
+        private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            Formatting = Formatting.Indented,
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+        };
+
         private static string GenerateData(DecisionTreeData tree)
         {
-            return JsonSerializer.Serialize(
-                tree.Root,
-                options: new JsonSerializerOptions()
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    WriteIndented = true
-                });
+            return JsonConvert.SerializeObject(tree.Root, SerializerSettings);
         }
     }
 }
