@@ -77,14 +77,10 @@ else {
             newScript.AppendLine("</script>");
             return HtmlNode.CreateNode(newScript.ToString());
         }
-
       
         private static string GenerateData(DecisionTreeData tree)
         {
-            
-            return JsonSerializer.Serialize(
-                tree.Root,
-                options: JsonSerializerOptions);
+            return JsonSerializer.Serialize(tree.Root, options: JsonSerializerOptions);
         }
     }
 }
