@@ -6,13 +6,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using HtmlAgilityPack;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System.Text.Json;
 
 namespace Microsoft.ML.DotNet.Interactive
 {
     public static class DecisionTreeDataFormatting
     {
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+
         internal static string GenerateTreeView(DecisionTreeData tree)
         {
             var newHtmlDocument = new HtmlDocument();
@@ -73,16 +78,13 @@ else {
             return HtmlNode.CreateNode(newScript.ToString());
         }
 
-        private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
-        {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            Formatting = Formatting.Indented,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-        };
-
+      
         private static string GenerateData(DecisionTreeData tree)
         {
-            return JsonConvert.SerializeObject(tree.Root, SerializerSettings);
+            
+            return JsonSerializer.Serialize(
+                tree.Root,
+                options: JsonSerializerOptions);
         }
     }
 }

@@ -18,7 +18,6 @@ namespace Microsoft.ML.DotNet.Interactive
 
             return Task.CompletedTask;
         }
-
       
     }
 }
