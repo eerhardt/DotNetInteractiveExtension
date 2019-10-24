@@ -3,31 +3,26 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 using HtmlAgilityPack;
-using Microsoft.DotNet.Interactive.Rendering;
+using System.Text.Json;
 
-namespace Microsoft.DotNet.Interactive.XPlot
+namespace Microsoft.ML.DotNet.Interactive
 {
-    public class MlKernelExtension : IKernelExtension
+    public static class DecisionTreeDataFormatting
     {
-        public Task OnLoadAsync(IKernel kernel)
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
         {
-            Formatter<DecisionTreeData>.Register((tree, writer) =>
-            {
-                writer.Write(GenerateTreeView(tree));
-            }, "text/html");
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
 
-            return Task.CompletedTask;
-        }
-
-        private string GenerateTreeView(DecisionTreeData tree)
+        internal static string GenerateTreeView(DecisionTreeData tree)
         {
             var newHtmlDocument = new HtmlDocument();
 
-            var renderingId = "a" + Guid.NewGuid().ToString();
+            var renderingId = $"a{Guid.NewGuid()}";
 
             newHtmlDocument.DocumentNode.ChildNodes.Add(HtmlNode.CreateNode($"<svg id=\"{renderingId}\"></svg>"));
             newHtmlDocument.DocumentNode.ChildNodes.Add(GetRenderingScript());
@@ -36,13 +31,14 @@ namespace Microsoft.DotNet.Interactive.XPlot
             return newHtmlDocument.DocumentNode.WriteContentTo();
         }
 
-        private HtmlNode GetRenderingScript()
+        private static HtmlNode GetRenderingScript()
         {
             var newScript = new StringBuilder();
             newScript.AppendLine("<script type=\"text/javascript\">");
 
-            var assembly = typeof(MlKernelExtension).Assembly;
-            var resourceStream = assembly.GetManifestResourceStream("Microsoft.DotNet.Interactive.XPlot.RegressionTree.js");
+            var assembly = typeof(DecisionTreeDataFormatting).Assembly;
+            var resourceName = assembly.GetManifestResourceNames().First(n => n.EndsWith("RegressionTree.js"));
+            var resourceStream = assembly.GetManifestResourceStream(resourceName);
             using (var reader = new StreamReader(resourceStream, Encoding.UTF8))
             {
                 newScript.AppendLine(reader.ReadToEnd());
@@ -81,16 +77,10 @@ else {
             newScript.AppendLine("</script>");
             return HtmlNode.CreateNode(newScript.ToString());
         }
-
+      
         private static string GenerateData(DecisionTreeData tree)
         {
-            return JsonSerializer.Serialize(
-                tree.Root,
-                options: new JsonSerializerOptions()
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    WriteIndented = true
-                });
+            return JsonSerializer.Serialize(tree.Root, options: JsonSerializerOptions);
         }
     }
 }
