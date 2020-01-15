@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Microsoft.ML.DotNet.Interactive</RootNamespace>
     <LangVersion>preview</LangVersion>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -21,9 +21,8 @@
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.12" />
-    <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.20065.4" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.20065.4" />
+    <PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.20062.1" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.20062.1" />
     <PackageReference Include="Microsoft.ML.FastTree" Version="1.4.0-preview2" />
   </ItemGroup>
 
