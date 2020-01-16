@@ -3,7 +3,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Rendering;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.ML.DotNet.Interactive
 {
