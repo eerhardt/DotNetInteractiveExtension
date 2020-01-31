@@ -73,6 +73,9 @@ RUN dotnet interactive jupyter install
 RUN dotnet build ${HOME}/src/Microsoft.ML.DotNet.Interactive.Extensions -c Release 
 RUN dotnet pack ${HOME}/src/Microsoft.ML.DotNet.Interactive.Extensions -c Release 
 
+RUN dotnet build ${HOME}/src/Microsoft.Data.Analysis.Interactive -c Release 
+RUN dotnet pack ${HOME}/src/Microsoft.Data.Analysis.Interactive -c Release 
+
 # Publish nuget if there is any
 WORKDIR ${HOME}/src/
 RUN dotnet nuget push **/*.nupkg -s ${HOME}/localNuget/
