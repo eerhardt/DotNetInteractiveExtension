@@ -1,0 +1,26 @@
+#!csharp
+
+#i nuget:C:\dev\DotNetInteractiveExtension\src\Microsoft.Data.Analysis.Interactive\bin\Debug\
+#r "nuget:Microsoft.Data.Analysis.Interactive"
+
+#!csharp
+
+#!generatedataframe -h
+
+#!csharp
+
+using Microsoft.Data.Analysis;
+
+#!generatedataframe --csv C:\dev\housing.csv --type-name Foo --variable-name foo
+
+#!csharp
+
+foo
+
+#!csharp
+
+a
+
+#!powershell
+
+start C:\dev\DotNetInteractiveExtension\src\Microsoft.Data.Analysis.Interactive\bin\Debug\

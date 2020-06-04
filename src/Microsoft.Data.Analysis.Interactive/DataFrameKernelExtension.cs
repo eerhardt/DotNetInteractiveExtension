@@ -8,9 +8,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.Data.Analysis.Interactive
 {
@@ -60,7 +58,6 @@ public class {resultTypeName} : DataFrame
             Columns.Add(column);
         }}
     }}
-
 ";
             stringBuilder.Append(constructor);
             prettyFormatter.Append(constructor);
@@ -68,7 +65,6 @@ public class {resultTypeName} : DataFrame
             foreach (var column in dataFrame.Columns)
             {
                 string columnName = column.Name.Replace(" ", string.Empty);
-                Type dataType = column.DataType;
                 string typeName = GetFriendlyName(column.GetType());
                 stringBuilder.Append($@"
     public {typeName} {columnName} 
@@ -118,12 +114,12 @@ public static new {resultTypeName} LoadCsv(string filename,
             prettyFormatter.AppendLine();
         }
 
-        public async Task HandleCsvAsync(FileInfo csv, KernelInvocationContext context)
+        public async Task HandleCsvAsync(CSharpKernel kernel, FileInfo csv, string typeName, string variableName, KernelInvocationContext context)
         {
             _generateCsvMethod = true;
             // Infer the type and generated name from fileName
             string fileName = csv.Name.Split('.')[0]; //Something like housing.A.B.csv would return housing
-            string typeName = fileName.Replace(" ", "");
+            typeName ??= fileName.Replace(" ", "");
             StringBuilder strBuilder;
             StringBuilder prettyFormatter;
             using (var stream = csv.Open(FileMode.Open))
@@ -135,19 +131,19 @@ public static new {resultTypeName} LoadCsv(string filename,
             _generateCsvMethod = false;
 
             // Create a new DataFrame var called dataFrameName
-            string dataFrameName = typeName + "DataFrame";
+            variableName ??= typeName + "DataFrame";
             strBuilder.AppendLine();
             string buildNamedDataFrame = $@"
 DataFrame _df = DataFrame.LoadCsv(filename: @""{csv.FullName}"");
-{typeName} {dataFrameName} = new {typeName}(_df);
+{typeName} {variableName} = new {typeName}(_df);
 ";
             strBuilder.Append(buildNamedDataFrame);
             prettyFormatter.AppendLine();
             prettyFormatter.Append(buildNamedDataFrame);
-            await context.DisplayAsync(prettyFormatter.ToString());
-            context.Publish(new DisplayedValueProduced($"Created {typeName} {dataFrameName}: ", context.Command));
 
-            await SubmitCodeToKernel(strBuilder, context);
+            context.Display($"Created variable {variableName} of type {typeName}");
+
+            await kernel.SubmitCodeAsync(strBuilder.ToString());
         }
 
         public StringBuilder GenerateTypedDataFrame(DataFrame df, string typeName, KernelInvocationContext context, out StringBuilder prettyFormatter)
@@ -156,71 +152,64 @@ DataFrame _df = DataFrame.LoadCsv(filename: @""{csv.FullName}"");
             return typedDataFrame;
         }
 
-        private async Task SubmitCodeToKernel(StringBuilder code, KernelInvocationContext context)
+        public async Task HandleDataFrameAsync(CSharpKernel csharpKernel, string dataFrameName, string typeName, KernelInvocationContext context)
         {
-            var command = new SubmitCode(code.ToString());
-            await context.HandlingKernel.SendAsync(command);
-        }
-
-        public async Task HandleDataFrameAsync(string dataFrameName, string typeName, KernelInvocationContext context)
-        {
-            if (context.HandlingKernel is CSharpKernel cSharp)
+            var variables = csharpKernel.ScriptState.Variables;
+            for (int i = 0; i < variables.Length; i++)
             {
-                System.Collections.Immutable.ImmutableArray<CodeAnalysis.Scripting.ScriptVariable> variables = cSharp.ScriptState.Variables;
-                for (int i = 0; i < variables.Length; i++)
+                CodeAnalysis.Scripting.ScriptVariable variable = variables[i];
+                if ((dataFrameName == null || variable.Name == dataFrameName) && variable.Value is DataFrame df)
                 {
-                    CodeAnalysis.Scripting.ScriptVariable variable = variables[i];
-                    if ((dataFrameName == null || variable.Name == dataFrameName) && variable.Value is DataFrame df)
-                    {
-                        var strBuilder = GenerateTypedDataFrame(df, typeName, context, out StringBuilder prettyFormatter);
-                        await context.DisplayAsync(prettyFormatter.ToString());
-                        await SubmitCodeToKernel(strBuilder, context);
-                    }
+                    var strBuilder = GenerateTypedDataFrame(df, typeName, context, out StringBuilder prettyFormatter);
+                    await context.DisplayAsync(prettyFormatter.ToString());
+                    await csharpKernel.SubmitCodeAsync(strBuilder.ToString());
                 }
             }
         }
 
         public Task OnLoadAsync(IKernel kernel)
         {
-            var kernelBase = kernel as KernelBase;
-            var directive = new Command("#!generatedataframe")
+            if (kernel.FindKernel("csharp") is CSharpKernel csharpKernel)
             {
-                Handler = CommandHandler.Create(async (FileInfo csv, string dataFrameName, string typeName, KernelInvocationContext context) =>
+                var directive = new Command("#!generatedataframe")
                 {
-                    // do the job
-                    try
+                    Handler = CommandHandler.Create(async (FileInfo csv, string variableName, string typeName, KernelInvocationContext context) =>
                     {
-                        if (csv != null)
+                        // do the job
+                        try
                         {
-                            HandleCsvAsync(csv, context);
+                            if (csv != null)
+                            {
+                                await HandleCsvAsync(csharpKernel, csv, typeName, variableName, context);
+                            }
+                            else
+                            {
+                                await HandleDataFrameAsync(csharpKernel, variableName, typeName, context);
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            HandleDataFrameAsync(dataFrameName, typeName, context);
+                            context.Fail(ex, $"Encountered an exception. Could not create type { (csv != null ? csv.FullName : typeName)}");
                         }
-                    }
-                    catch (Exception)
-                    {
-                        await context.DisplayAsync($"Encountered an exception. Could not create type { (csv != null ? csv.Name : typeName)}");
-                    }
-                })
-            };
+                    })
+                };
 
-            directive.AddOption(new Option<FileInfo>(
-                "--csv", "Read in a csv file into a DataFrame with strong properties. Also emits the generated DataFrame type").ExistingOnly());
+                directive.AddOption(new Option<FileInfo>(
+                    "--csv", "Read in a csv file into a DataFrame with strong properties. Also emits the generated DataFrame type").ExistingOnly());
 
-            directive.AddOption(new Option<string>(
-                "--type-name",
-                getDefaultValue: () => "InteractiveDataFrame",
-                "The name of the generated DataFrame type. Defaults to InteractiveDataFrame"));
+                directive.AddOption(new Option<string>(
+                    "--type-name",
+                    getDefaultValue: () => "InteractiveDataFrame",
+                    "The name of the generated DataFrame type. Defaults to InteractiveDataFrame"));
 
-            directive.AddOption(new Option<string>(
-                "--dataframe-name",
-                "The DataFrame variable to generate type information for"));
-            kernelBase.AddDirective(directive);
+                directive.AddOption(new Option<string>(
+                    "--variable-name",
+                    "The DataFrame variable name to initialize"));
+                
+                csharpKernel.AddDirective(directive);
+            }
 
             return Task.CompletedTask;
-
         }
     }
 }
