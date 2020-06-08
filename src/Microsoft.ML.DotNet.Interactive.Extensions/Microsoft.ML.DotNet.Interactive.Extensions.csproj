@@ -26,8 +26,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.20074.3" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.20074.3" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.20154.7" />
     <PackageReference Include="Microsoft.ML.FastTree" Version="1.4.0-preview2" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.20154.7" />
   </ItemGroup>
 
   <ItemGroup>
