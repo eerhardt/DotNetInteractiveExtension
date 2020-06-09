@@ -21,11 +21,6 @@ namespace Microsoft.Data.Analysis.Interactive
     {
         public Task OnLoadAsync(IKernel kernel)
         {
-            //Formatter<DataFrame>.Register((tree, writer) =>
-            //{
-            //    writer.Write("");
-            //}, "text/html");
-
             Formatter<DataFrame>.Register((df, writer) =>
             {
                 const int TAKE = 500;
@@ -33,7 +28,8 @@ namespace Microsoft.Data.Analysis.Interactive
 
                 var uniqueId = $"table_{DateTime.Now.Ticks}";
 
-                var title = h3[style: "text-align: center;"]($"DataFrame ({df.Columns.Count} columns, {df.Rows.Count} rows) | MAX rows: {TAKE}");
+                var maxMessage = df.Columns.Count > TAKE ? "| Showing a max of {TAKE} rows" : string.Empty;
+                var title = h3[style: "text-align: center;"]($"DataFrame ({df.Columns.Count} columns, {df.Rows.Count} rows) {maxMessage}");
 
                 var header = new List<IHtmlContent>
                 {
@@ -106,17 +102,15 @@ namespace Microsoft.Data.Analysis.Interactive
 
             static string BuildPageScript(int page, int size, string uniqueId)
             {
-                var script = string.Empty;
-                script += $"var els = document.querySelectorAll('#{uniqueId} tbody tr:nth-child(n+{page * size + 1})'); ";
-                script += $"for (var j = 0; j < {size}; j++) {{ els[j].style.display='table-row'; }}";
+                var script = $"var pageRows = document.querySelectorAll('#{uniqueId} tbody tr:nth-child(n+{page * size + 1})'); ";
+                script += $"for (var j = 0; j < {size}; j++) {{ pageRows[j].style.display='table-row'; }}";
                 return script;
             }
 
             static string BuildHideRowsScript(string uniqueId)
             {
-                string script = string.Empty;
-                script += $"var els = document.querySelectorAll('#{uniqueId} tbody tr:nth-child(n)'); ";
-                script += "for (var i = 0; i < els.length; i++) { els[i].style.display='none'; } ";
+                var script = $"var allRows = document.querySelectorAll('#{uniqueId} tbody tr:nth-child(n)'); ";
+                script += "for (var i = 0; i < allRows.length; i++) { allRows[i].style.display='none'; } ";
                 return script;
             }
         }
