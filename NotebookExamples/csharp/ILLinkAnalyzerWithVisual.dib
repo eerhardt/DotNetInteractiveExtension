@@ -1,0 +1,168 @@
+#!csharp
+
+#r "nuget:illinkanalyzer,0.0.1-alpha1"
+
+#!csharp
+
+using System.IO;
+using LinkerAnalyzer;
+using LinkerAnalyzer.Core;
+
+string outputFolder = @"C:\temp\FromPranav\wasm-net5\linked\";
+
+var graph = new ConsoleDependencyGraph();
+graph.Load(Path.Combine(outputFolder, "linker-dependencies.xml.gz"));
+graph.SpaceAnalyzer = new SpaceAnalyzer(outputFolder);
+graph.SpaceAnalyzer.LoadAssemblies (true);
+
+#!csharp
+
+graph.ShowStat(verbose: true)
+
+#!csharp
+
+graph.ShowRoots()
+
+#!csharp
+
+class Data
+{
+    public Group[] groups;
+}
+class Group
+{
+    public string id;
+    public string label;
+    public float weight;
+    
+    public Group[] groups;
+}
+
+#!csharp
+
+using LinkerAnalyzer.Core;
+using System.Text.RegularExpressions;
+
+private static Data GetGraphVisual(this DependencyGraph graph)
+{
+    var groups = new List<Group>();
+
+    var largestNodes = graph.SpaceAnalyzer.GetLargestNodes(50, "TypeDef");
+    
+    foreach (var largeNode in largestNodes)
+    {
+        groups.Add(new Group()
+        {
+            id = largeNode.Key,
+            label = GetName(largeNode.Key),
+            weight = largeNode.Value
+        });
+    }
+    
+    var graphData = new Data();
+    graphData.groups = groups.ToArray();
+    return graphData;
+}
+
+private static string GetName(string id)
+{
+    string coreName = GetNameCore(id);
+    if (coreName.StartsWith("System."))
+        coreName = coreName.Substring("System.".Length);
+    if (coreName.Length > 20)
+        return coreName.Substring(0, 20) + "...";
+    return coreName;
+}
+private static string GetNameCore(string id)
+{
+    if (id.StartsWith("TypeDef"))
+        return GetTypeDefName(id);
+    if (id.StartsWith("Method"))
+        return GetMethodName(id);
+    
+    var index = id.IndexOf(':');
+    if (index != -1)
+    {
+        return id.Substring(index + 1);
+    }
+    return id;
+}
+
+private static string GetTypeDefName(string id)
+{
+    var index = id.IndexOf(':');
+    int index2 = id.Length;
+    if (index != -1)
+    {
+        index2 = id.IndexOf(':', index + 1);
+        if (index2 != -1)
+        {
+            return id.Substring(index + 1, index2 - index - 1);
+        }
+        return id.Substring(index + 1);
+    }
+    return id;
+}
+
+private static string GetMethodName(string id)
+{
+    var index = id.IndexOf("::");
+    if (index != -1)
+    {
+        index = id.LastIndexOf('.', index);
+        var index2 = id.IndexOf('(', index + 1);
+        if (index2 != -1)
+        {
+            return id.Substring(index + 1, index2 - index - 1);
+        }
+        return id.Substring(index + 1);
+    }
+    return id;
+}
+
+#!csharp
+
+var graphData = graph.GetGraphVisual();
+graph.
+
+#!javascript
+
+notebookScope.plot2 = (visualizationId, variableName) => { 
+
+    let dtree_require = require.config({
+        paths: {
+            foamtree: "https://get.carrotsearch.com/foamtree/latest/carrotsearch.foamtree"
+        }
+    });
+
+    dtree_require(["foamtree"], function (foamtree) {
+        interactive.csharp.getVariable(variableName)
+            .then(data => {
+            
+                var foamtree = new CarrotSearchFoamTree({
+                    // Identifier of the HTML element defined above
+                    id: visualizationId,
+                    layout: "squarified",
+                    // Some data to visualize.
+                    dataObject: data
+                });
+        });
+    });
+};
+
+#!html
+
+<div id="visualization" style="width: 1000px; height: 800px"></div>
+
+#!javascript
+
+notebookScope.plot2("visualization", "graphData");
+
+#!csharp
+
+graph.ShowRawDependencies(@"TypeDef:System.Xml.XmlEncodedRawTextWriter:System.Private.Xml.dll");
+//graph.SpaceAnalyzer.GetLargestNodes(50, "TypeDef")
+
+#!csharp
+
+TypeDef:System.Number:System.Private.CoreLib.dll
