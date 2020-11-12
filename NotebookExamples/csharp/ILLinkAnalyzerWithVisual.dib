@@ -1,5 +1,6 @@
 #!csharp
 
+#i "nuget:https://www.myget.org/F/eerhardt-testfeed/api/v3/index.json"
 #r "nuget:illinkanalyzer,0.0.1-alpha1"
 
 #!csharp
