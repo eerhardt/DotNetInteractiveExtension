@@ -9,9 +9,9 @@ namespace Microsoft.ML.DotNet.Interactive
 {
     public class MlKernelExtension : IKernelExtension
     {
-        public Task OnLoadAsync(IKernel kernel)
+        public Task OnLoadAsync(Kernel kernel)
         {
-            Formatter<DecisionTreeData>.Register((tree, writer) =>
+            Formatter.Register<DecisionTreeData>((tree, writer) =>
             {
                 writer.Write(DecisionTreeDataFormatting.GenerateTreeView(tree));
             }, "text/html");

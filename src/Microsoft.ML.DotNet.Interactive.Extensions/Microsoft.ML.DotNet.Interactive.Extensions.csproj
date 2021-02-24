@@ -15,20 +15,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="interactive-extensions/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="interactive-extensions/dotnet" Visible="false" />
     <None Include="$(OutputPath)\Microsoft.ML.DotNet.Interactive.dll" Pack="true" PackagePath="lib/netstandard2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.12" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.9.6">
+    <!--<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.20074.3" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.20154.7" />
+    </PackageReference>-->
+    <PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.21108.3" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.Formatting" Version="1.0.0-beta.21108.3" />
     <PackageReference Include="Microsoft.ML.FastTree" Version="1.4.0-preview2" />
-    <PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.20154.7" />
+    <PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.21108.3" />
   </ItemGroup>
 
   <ItemGroup>
