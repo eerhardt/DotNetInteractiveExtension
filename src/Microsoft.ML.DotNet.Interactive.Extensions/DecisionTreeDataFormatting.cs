@@ -15,7 +15,6 @@ namespace Microsoft.ML.DotNet.Interactive
         private static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
         };
 
         internal static string GenerateTreeView(DecisionTreeData tree)
@@ -54,8 +53,8 @@ namespace Microsoft.ML.DotNet.Interactive
             newScript.AppendLine("<script type=\"text/javascript\">");
             newScript.AppendLine(@"
 var dotnet_regressiontree_renderTree = function() {
-    var mlNetRequire = requirejs.config({context:'microsoft.ml-1.3.1',paths:{d3:'https://d3js.org/d3.v5.min'}});
-    mlNetRequire(['d3'], function(d3) {");
+    let mlNetDTreeLoader = window.configureRequire({paths:{d3:'https://d3js.org/d3.v5.min'}});
+    mlNetDTreeLoader(['d3'], function (d3) {");
             newScript.AppendLine();
             newScript.Append($"var treeData = {GenerateData(tree)};");
             newScript.AppendLine();
@@ -63,24 +62,15 @@ var dotnet_regressiontree_renderTree = function() {
             newScript.AppendLine();
             newScript.AppendLine(@"});
 };
-if ((typeof(requirejs) !==  typeof(Function)) || (typeof(requirejs.config) !== typeof(Function))) { 
-    var script = document.createElement(""script""); 
-    script.setAttribute(""src"", ""https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js""); 
-    script.onload = function(){
-        dotnet_regressiontree_renderTree();
-    };
-    document.getElementsByTagName(""head"")[0].appendChild(script); 
-}
-else {
-    dotnet_regressiontree_renderTree();
-}");
+
+dotnet_regressiontree_renderTree();");
             newScript.AppendLine("</script>");
             return HtmlNode.CreateNode(newScript.ToString());
         }
       
         private static string GenerateData(DecisionTreeData tree)
         {
-            return JsonSerializer.Serialize(tree.Root, options: JsonSerializerOptions);
+            return JsonSerializer.Serialize(tree.Root, JsonSerializerOptions);
         }
     }
 }
